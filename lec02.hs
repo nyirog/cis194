@@ -80,33 +80,27 @@ initialState = S (C 0 1) R
 atCoord :: Coord -> Picture -> Picture
 atCoord (C x y) pic = translated (fromIntegral x) (fromIntegral y) pic
 
-adjacentCoord :: Direction -> Coord -> Coord
-adjacentCoord R (C x y) = C (x+1) y
-adjacentCoord U (C x y) = C  x   (y+1)
-adjacentCoord L (C x y) = C (x-1) y
-adjacentCoord D (C x y) = C  x   (y-1)
+adjacentCoord :: Coord -> Direction -> Coord
+adjacentCoord (C x y) R = C (x+1) y
+adjacentCoord (C x y) U = C  x   (y+1)
+adjacentCoord (C x y) L = C (x-1) y
+adjacentCoord (C x y) D = C  x   (y-1)
 
 handleTime :: Double -> State -> State
 handleTime _ c = c
 
 handleEvent :: Event -> State -> State
 handleEvent (KeyPress "Esc")   _       = initialState
-handleEvent (KeyPress "Right") (S c _) = S (handleDirection c R) R
-handleEvent (KeyPress "Up")    (S c _) = S (handleDirection c U) U
-handleEvent (KeyPress "Left")  (S c _) = S (handleDirection c L) L
-handleEvent (KeyPress "Down")  (S c _) = S (handleDirection c D) D
+handleEvent (KeyPress "Right") (S c _) = S (nextCoord c R) R
+handleEvent (KeyPress "Up")    (S c _) = S (nextCoord c U) U
+handleEvent (KeyPress "Left")  (S c _) = S (nextCoord c L) L
+handleEvent (KeyPress "Down")  (S c _) = S (nextCoord c D) D
 handleEvent _                  s       = s
 
-handleDirection :: Coord -> Direction -> Coord
-handleDirection c d = rule (adjacentCoord d c) c
-  where
-    rule :: Coord -> Coord -> Coord
-    rule nc oc = ruleAtTile (maze nc) nc oc
-
-    ruleAtTile :: Tile -> Coord -> Coord -> Coord
-    ruleAtTile Ground  c _ = c
-    ruleAtTile Storage c _ = c
-    ruleAtTile _       _ c = c
+nextCoord :: Coord -> Direction -> Coord
+nextCoord c d 
+  = let next = adjacentCoord c d
+    in if (maze next) `elem` [Ground, Storage] then next else c
 
 
 drawState :: State -> Picture
