@@ -77,7 +77,7 @@ maze2 (C x y)
   | x >= -2 && x <= 2 && y == 0 = Box
   | otherwise                   = Ground
 
-data Direction = R | U | L | D
+data Direction = R | U | L | D | O
 
 data Coord = C Integer Integer
 
@@ -100,6 +100,7 @@ adjacentCoord (C x y) R = C (x+1) y
 adjacentCoord (C x y) U = C  x   (y+1)
 adjacentCoord (C x y) L = C (x-1) y
 adjacentCoord (C x y) D = C  x   (y-1)
+adjacentCoord c       O = c
 
 handleTime :: Double -> State -> State
 handleTime _ s = s
@@ -119,7 +120,7 @@ handleEvent (KeyPress key) (S c _ l)
     dir "Up"     = U
     dir "Left"   = L
     dir "Down"   = D
-    dir _        = R
+    dir _        = O
 
     nextCoord :: State -> Coord
     nextCoord (S c d l)
