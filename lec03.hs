@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 import CodeWorld
+import Data.Text.Internal (Text)
 
 -- Lists
 
@@ -35,7 +36,7 @@ moveFromTo = undefined
 
 -- The maze
 
-data Tile = Wall | Ground | Storage | Box | Blank
+data Tile = Wall | Ground | Storage | Box | Blank deriving Eq
        
 maze :: Coord -> Tile 
 maze (C x y)
@@ -54,19 +55,35 @@ mazeWithBoxes = undefined
 
 -- The state
 
-data State = State -- FIXME!
+data State = S Coord Direction (List Coord)
 
 
 initialBoxes :: List Coord
 initialBoxes = undefined
 
 initialState :: State
-initialState = State -- FIXME!
+initialState = S (C 0 1) R Empty
 
 -- Event handling
 
 handleEvent :: Event -> State -> State
-handleEvent _ s = s -- FIXME!
+handleEvent (KeyPress key) (S c _ bs) = S (nextCoord dir c) dir bs
+  where
+    dir :: Direction
+    dir
+      | key == "Right" = R
+      | key == "Up"    = U
+      | key == "Left"  = L
+      | key == "Down"  = D
+      | otherwise      = R
+
+    nextCoord :: Direction -> Coord -> Coord
+    nextCoord d c = if tile `elem` [Ground, Storage] then next else c
+      where
+        next = adjacentCoord d c
+        tile = maze next
+
+handleEvent _ s = s
 
 -- Drawing
 
@@ -132,7 +149,7 @@ pictureOfBoxes :: List Coord -> Picture
 pictureOfBoxes cs = combine (mapList (\c -> atCoord c (drawTile Box)) cs)
 
 drawState :: State -> Picture
-drawState State = pictureOfMaze
+drawState (S c d _) = atCoord c (player d) & pictureOfMaze
 
 -- The complete interaction
 
