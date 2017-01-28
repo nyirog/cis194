@@ -14,6 +14,7 @@ combine :: List Picture -> Picture
 combine Empty = blank
 combine (Entry p ps) = p & combine ps
 
+
 -- Coordinates
 
 
@@ -22,7 +23,7 @@ data Coord = C Integer Integer
 data Direction = R | U | L | D
 
 eqCoord :: Coord -> Coord -> Bool
-eqCoord = undefined
+eqCoord (C x y) (C x' y')= x == x' && y == y'
 
 adjacentCoord :: Direction -> Coord -> Coord
 adjacentCoord R (C x y) = C (x+1) y
@@ -48,10 +49,15 @@ maze (C x y)
   | otherwise                = Ground
 
 noBoxMaze :: Coord -> Tile
-noBoxMaze = undefined            
+noBoxMaze c = case maze c of
+  Box -> Ground
+  t -> t
 
 mazeWithBoxes :: List Coord -> Coord -> Tile
-mazeWithBoxes = undefined
+mazeWithBoxes Empty c' = noBoxMaze c'
+mazeWithBoxes (Entry c cs) c'
+  | c `eqCoord` c' = Box
+  | otherwise      = mazeWithBoxes cs c'
 
 -- The state
 
@@ -59,10 +65,16 @@ data State = S Coord Direction (List Coord)
 
 
 initialBoxes :: List Coord
-initialBoxes = undefined
+initialBoxes = go (-10) (-10)
+  where
+    go 11 11 = Empty
+    go  x 11 = go (x+1) (-10)
+    go  x  y = case maze (C x y) of
+      Box -> Entry (C x y) (go x (y+1))
+      _   -> go x (y+1)
 
 initialState :: State
-initialState = S (C 0 1) R Empty
+initialState = S (C 0 1) R initialBoxes
 
 -- Event handling
 
