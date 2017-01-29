@@ -19,6 +19,10 @@ elemList _ Empty = False
 elemList c' (Entry c cs)
   | c == c' = True
   | otherwise = elemList c' cs
+
+allList :: List Bool -> Bool
+allList Empty = True
+allList (Entry b bs) = b && allList bs
 -- Coordinates
 
 
@@ -108,6 +112,14 @@ handleMove (S c _ bs) d = case nextTile of
     moveFromTo :: Coord -> Coord -> (Coord -> Coord)
     moveFromTo src dst c = if src == c then dst else c
 
+
+isWon :: State -> Bool
+isWon (S c d bs) = allList (mapList isOnStorage bs)
+  where
+    isOnStorage :: Coord -> Bool
+    isOnStorage c = noBoxMaze c == Storage
+
+
 -- Drawing
 
 wall, ground, storage, box :: Picture
@@ -172,8 +184,13 @@ pictureOfBoxes :: List Coord -> Picture
 pictureOfBoxes cs = combine (mapList (\c -> atCoord c (drawTile Box)) cs)
 
 drawState :: State -> Picture
-drawState (S c d cs) = atCoord c (player d) & (pictureOfBoxes cs) & pictureOfMaze
+drawState s@(S c d cs)
+  | isWon s = wonScreen
+  | otherwise  = atCoord c (player d) & (pictureOfBoxes cs) & pictureOfMaze
 
+
+wonScreen :: Picture
+wonScreen = scaled 3 3 (text "You won!")
 -- The complete interaction
 
 sokoban :: Interaction State
