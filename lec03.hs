@@ -20,7 +20,7 @@ combine (Entry p ps) = p & combine ps
 
 data Coord = C Integer Integer
 
-data Direction = R | U | L | D | O
+data Direction = R | U | L | D
 
 eqCoord :: Coord -> Coord -> Bool
 eqCoord (C x y) (C x' y')= x == x' && y == y'
@@ -30,7 +30,6 @@ adjacentCoord R (C x y) = C (x+1) y
 adjacentCoord U (C x y) = C  x   (y+1)
 adjacentCoord L (C x y) = C (x-1) y
 adjacentCoord D (C x y) = C  x   (y-1)
-adjacentCoord O c       = c
 
 moveFromTo :: Coord -> Coord -> Coord -> Coord
 moveFromTo = undefined
@@ -80,23 +79,17 @@ initialState = S (C 0 1) R initialBoxes
 -- Event handling
 
 handleEvent :: Event -> State -> State
-handleEvent (KeyPress key) (S c d bs) = S (nextCoord dir c) dir bs
-  where
-    dir :: Direction
-    dir
-      | key == "Right" = R
-      | key == "Up"    = U
-      | key == "Left"  = L
-      | key == "Down"  = D
-      | otherwise      = O
-
-    nextCoord :: Direction -> Coord -> Coord
-    nextCoord d c = if tile `elem` [Ground, Storage] then next else c
-      where
-        next = adjacentCoord d c
-        tile = maze next
-
+handleEvent (KeyPress "Right") (S c d bs) = S (nextCoord R c) R bs
+handleEvent (KeyPress "Up") (S c d bs)    = S (nextCoord U c) U bs
+handleEvent (KeyPress "Left") (S c d bs)  = S (nextCoord L c) L bs
+handleEvent (KeyPress "Down") (S c d bs)  = S (nextCoord D c) D bs
 handleEvent _ s = s
+
+nextCoord :: Direction -> Coord -> Coord
+nextCoord d c = if tile `elem` [Ground, Storage] then next else c
+  where
+    next = adjacentCoord d c
+    tile = maze next
 
 -- Drawing
 
@@ -157,7 +150,6 @@ player D = translated 0 0.3 cranium
   where cranium = circle 0.18
                 & translated   0.06  0.08 (solidCircle 0.04)
                 & translated (-0.06) 0.08 (solidCircle 0.04)
-player O = player R
 
 pictureOfBoxes :: List Coord -> Picture
 pictureOfBoxes cs = combine (mapList (\c -> atCoord c (drawTile Box)) cs)
