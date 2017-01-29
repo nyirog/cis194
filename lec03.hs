@@ -123,7 +123,7 @@ draw21times something = go (-10)
     go n  = something n & go (n+1)
 
 drawTileAt :: Coord -> Picture
-drawTileAt c = atCoord c (drawTile (maze c))
+drawTileAt c = atCoord c (drawTile (noBoxMaze c))
 
 
 atCoord :: Coord -> Picture -> Picture
@@ -161,7 +161,7 @@ pictureOfBoxes :: List Coord -> Picture
 pictureOfBoxes cs = combine (mapList (\c -> atCoord c (drawTile Box)) cs)
 
 drawState :: State -> Picture
-drawState (S c d _) = atCoord c (player d) & pictureOfMaze
+drawState (S c d cs) = atCoord c (player d) & (pictureOfBoxes cs) & pictureOfMaze
 
 -- The complete interaction
 
