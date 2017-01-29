@@ -222,34 +222,7 @@ withStartScreen (Interaction state0 step handle draw)
     
     draw' StartScreen = startScreen
     draw' (Running s) = draw s
-
-
-
-winningScreen :: Picture
-winningScreen = scaled 3 3 (text "You won!")
-
-data WState world = Winning | Game world
-
-withWinning :: Interaction s -> Interaction (WState s)
-withWinning (Interaction state0 step handle draw)
-  = Interaction state0' step' handle' draw'
-  where
-    state0' = Game state0
-
-    step' _ Winning = Winning
-    step' t (Game s) = Game (step t s)
-
-    handle' _ Winning = Winning
-    handle' e (Game s) = handleWinning (handle e s)
-
-    draw' (Game s) = draw s
-    draw' Winning = winningScreen
-
-    handleWinning :: s -> WState s
-    handleWinning s
-      | 1 == 1 = Game s
-
 -- The main function
 
 main :: IO ()
-main = runInteraction $ withStartScreen $ resetable $ withWinning sokoban
+main = runInteraction $ withStartScreen $ resetable sokoban
