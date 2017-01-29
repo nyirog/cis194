@@ -14,16 +14,17 @@ combine :: List Picture -> Picture
 combine Empty = blank
 combine (Entry p ps) = p & combine ps
 
-
+elemList :: Eq a => a -> List a -> Bool
+elemList _ Empty = False
+elemList c' (Entry c cs)
+  | c == c' = True
+  | otherwise = elemList c' cs
 -- Coordinates
 
 
-data Coord = C Integer Integer
+data Coord = C Integer Integer deriving Eq
 
 data Direction = R | U | L | D
-
-eqCoord :: Coord -> Coord -> Bool
-eqCoord (C x y) (C x' y')= x == x' && y == y'
 
 adjacentCoord :: Direction -> Coord -> Coord
 adjacentCoord R (C x y) = C (x+1) y
@@ -56,8 +57,8 @@ noBoxMaze c = case maze c of
 mazeWithBoxes :: List Coord -> Coord -> Tile
 mazeWithBoxes Empty c' = noBoxMaze c'
 mazeWithBoxes (Entry c cs) c'
-  | c `eqCoord` c' = Box
-  | otherwise      = mazeWithBoxes cs c'
+  | c == c' = Box
+  | otherwise = mazeWithBoxes cs c'
 
 -- The state
 
@@ -79,17 +80,30 @@ initialState = S (C 0 1) R initialBoxes
 -- Event handling
 
 handleEvent :: Event -> State -> State
-handleEvent (KeyPress "Right") (S c d bs) = S (nextCoord R c) R bs
-handleEvent (KeyPress "Up") (S c d bs)    = S (nextCoord U c) U bs
-handleEvent (KeyPress "Left") (S c d bs)  = S (nextCoord L c) L bs
-handleEvent (KeyPress "Down") (S c d bs)  = S (nextCoord D c) D bs
+handleEvent (KeyPress "Right") s = handleMove s R
+handleEvent (KeyPress "Up")    s = handleMove s U
+handleEvent (KeyPress "Left")  s = handleMove s L
+handleEvent (KeyPress "Down")  s = handleMove s D
 handleEvent _ s = s
 
-nextCoord :: Direction -> Coord -> Coord
-nextCoord d c = if tile `elem` [Ground, Storage] then next else c
+handleMove :: State -> Direction -> State
+handleMove (S c _ bs) d = case nextTile of
+  Ground  -> S next d bs
+  Storage -> S next d bs
+  Box     -> if nextAfterTile `elem` [Ground, Storage]
+             then S next d (mapList (moveFromTo next nextAfter) bs)
+             else S c d bs
+  _       -> S c d bs
+
   where
     next = adjacentCoord d c
-    tile = maze next
+    nextTile = getTile next
+    nextAfter = adjacentCoord d next
+    nextAfterTile = getTile nextAfter
+    getTile :: Coord -> Tile
+    getTile c' = if c' `elemList` bs then Box else noBoxMaze c'
+    moveFromTo :: Coord -> Coord -> (Coord -> Coord)
+    moveFromTo src dst c = if src == c then dst else c
 
 -- Drawing
 
