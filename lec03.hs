@@ -20,7 +20,7 @@ combine (Entry p ps) = p & combine ps
 
 data Coord = C Integer Integer
 
-data Direction = R | U | L | D
+data Direction = R | U | L | D | O
 
 eqCoord :: Coord -> Coord -> Bool
 eqCoord (C x y) (C x' y')= x == x' && y == y'
@@ -30,6 +30,7 @@ adjacentCoord R (C x y) = C (x+1) y
 adjacentCoord U (C x y) = C  x   (y+1)
 adjacentCoord L (C x y) = C (x-1) y
 adjacentCoord D (C x y) = C  x   (y-1)
+adjacentCoord O c       = c
 
 moveFromTo :: Coord -> Coord -> Coord -> Coord
 moveFromTo = undefined
@@ -79,7 +80,7 @@ initialState = S (C 0 1) R initialBoxes
 -- Event handling
 
 handleEvent :: Event -> State -> State
-handleEvent (KeyPress key) (S c _ bs) = S (nextCoord dir c) dir bs
+handleEvent (KeyPress key) (S c d bs) = S (nextCoord dir c) dir bs
   where
     dir :: Direction
     dir
@@ -87,7 +88,7 @@ handleEvent (KeyPress key) (S c _ bs) = S (nextCoord dir c) dir bs
       | key == "Up"    = U
       | key == "Left"  = L
       | key == "Down"  = D
-      | otherwise      = R
+      | otherwise      = O
 
     nextCoord :: Direction -> Coord -> Coord
     nextCoord d c = if tile `elem` [Ground, Storage] then next else c
@@ -156,6 +157,7 @@ player D = translated 0 0.3 cranium
   where cranium = circle 0.18
                 & translated   0.06  0.08 (solidCircle 0.04)
                 & translated (-0.06) 0.08 (solidCircle 0.04)
+player O = player R
 
 pictureOfBoxes :: List Coord -> Picture
 pictureOfBoxes cs = combine (mapList (\c -> atCoord c (drawTile Box)) cs)
