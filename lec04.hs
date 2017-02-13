@@ -4,7 +4,7 @@ import Data.Text.Internal (Text)
 
 -- Lists
 
-data List a = Empty | Entry a (List a)
+data List a = Empty | Entry a (List a) deriving Show
     
 mapList :: (a -> b) -> List a -> List b
 mapList _ Empty = Empty
