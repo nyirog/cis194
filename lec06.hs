@@ -211,18 +211,17 @@ handleEvent _ s      = s
 
 -- Drawing
 
-wall, ground, storage, box :: Picture
-wall =    colored (grey 0.4) (solidRectangle 1 1)
-ground =  colored yellow     (solidRectangle 1 1)
-storage = colored white (solidCircle 0.3) & ground
-box =     colored brown      (solidRectangle 1 1)
+type DrawFun = Integer -> Integer -> Char
 
-drawTile :: Tile -> Picture
-drawTile Wall    = wall
-drawTile Ground  = ground
-drawTile Storage = storage
-drawTile Box     = box
-drawTile Blank   = blank
+type Picture = DrawFun -> DrawFun
+
+
+drawTile :: Tile -> Char
+drawTile Wall    = '#'
+drawTile Ground  = ' '
+drawTile Storage = 'x'
+drawTile Box     = 'o'
+drawTile Blank   = ' '
 
 pictureOfMaze :: (Coord -> Tile) -> Picture
 pictureOfMaze maze  = draw21times (\r -> draw21times (\c -> drawTileAt maze (C r c)))
@@ -241,33 +240,27 @@ drawTileAt maze c = atCoord c (drawTile (noBoxMaze maze c))
 atCoord :: Coord -> Picture -> Picture
 atCoord (C x y) pic = translated (fromIntegral x) (fromIntegral y) pic
 
+type DrawFun = Integer -> Integer -> Char
 
-player :: Direction -> Picture
-player R = translated 0 0.3 cranium
-         & path [(0,0),(0.3,0.05)] 
-         & path [(0,0),(0.3,-0.05)] 
-         & path [(0,-0.2),(0,0.1)] 
-         & path [(0,-0.2),(0.1,-0.5)]
-         & path [(0,-0.2),(-0.1,-0.5)]
-  where cranium = circle 0.18
-                & sector (7/6*pi) (1/6*pi) 0.18
-player L = scaled (-1) 1 (player R) -- Cunning!
-player U = translated 0 0.3 cranium
-         & path [(0,0),(0.3,0.05)] 
-         & path [(0,0),(-0.3,0.05)] 
-         & path [(0,-0.2),(0,0.1)] 
-         & path [(0,-0.2),(0.1,-0.5)]
-         & path [(0,-0.2),(-0.1,-0.5)]
-  where cranium = solidCircle 0.18
-player D = translated 0 0.3 cranium
-         & path [(0,0),(0.3,-0.05)] 
-         & path [(0,0),(-0.3,-0.05)] 
-         & path [(0,-0.2),(0,0.1)] 
-         & path [(0,-0.2),(0.1,-0.5)]
-         & path [(0,-0.2),(-0.1,-0.5)]
-  where cranium = circle 0.18
-                & translated   0.06  0.08 (solidCircle 0.04)
-                & translated (-0.06) 0.08 (solidCircle 0.04)
+type Picture = DrawFun -> DrawFun
+
+empty :: DrawFun
+empty _ _ = ' '
+
+atCoord :: Coord -> Char -> Picture
+atCoord (C x y) c f = go
+  where
+    go :: DrawFun
+    go x' y'
+      | x == x' && y == y' = c
+      | otherwise = f x' y'
+
+
+player :: Direction -> Char
+player R = '>'
+player L = '<'
+player U = '^'
+player D = 'v'
 
 
 showWin :: State -> Picture
