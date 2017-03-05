@@ -97,7 +97,52 @@ func10' :: Functor f => f Integer -> f Integer
 func10' xs = (\x -> (x*x)+10) <$> xs
 
 
+data Parser a  = P (String -> Maybe (a, String))
 
+runParser :: Parser t -> String -> Maybe (t, String)
+runParser (P p) = p
+
+parse :: Parser a -> String -> Maybe a
+parse p s = case runParser p s of
+    Just (r, "") -> Just r
+    _ -> Nothing
+
+noParser :: Parser a
+noParser = P (\_ -> Nothing)
+
+pureParser :: a -> Parser a
+pureParser a = P go where
+    go "" = Just (a, "")
+    go _ = Nothing
+
+
+instance Functor Parser where
+    fmap :: (a -> b) -> Parser a -> Parser b
+    fmap f p = P p' where
+        p' s = case runParser p s of
+            Just (r, s') -> Just (f r, s')
+            Nothing -> Nothing
+
+
+instance Applicative Parser where
+    pure = pureParser
+    fp <*> fx = P $ \s -> case runParser fp s of
+        Just (f, s') -> case runParser fx s' of
+            Just (r, s'') -> Just (f r, s'')
+            Nothing -> Nothing
+        Nothing -> Nothing
+
+instance Monad Parser where
+    return = pureParser
+    (>>=) :: Parser a -> (a -> Parser b) -> Parser b
+    fa >>= k = P $ \s -> case runParser fa s of
+        Just (r, s') -> runParser (k r) s'
+        Nothing -> Nothing
+
+anyChar :: Parser Char
+anyChar = P go where
+    go [c] = Just (c, [])
+    go _ = Nothing
 
 main :: IO ()
 main = print "egg"
